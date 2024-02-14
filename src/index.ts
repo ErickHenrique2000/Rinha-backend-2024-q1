@@ -1,5 +1,7 @@
 import express from 'express'
 import knex from 'knex'
+import { resolve } from 'path'
+import { appendFileSync, existsSync, mkdirSync } from 'fs';
 import { createClient } from 'redis';
 
 interface Cliente{
@@ -17,6 +19,23 @@ interface Transacao {
     valor: number,
     realizada_em: Date
 }
+
+function log(...args: any[]): void {
+    console.log(args);
+    appendFileSync(path, `${args.join(',')}\n`);
+
+}
+
+const fileName = `logs.log`;
+
+const WORKDIR = resolve(process.cwd(), "workdir");
+if (!existsSync(WORKDIR)) mkdirSync(WORKDIR);
+
+const LOGS_DIR = resolve(WORKDIR, "logs");
+if (!existsSync(LOGS_DIR)) mkdirSync(LOGS_DIR);
+
+const path = resolve(LOGS_DIR, fileName);
+
 
 const client = createClient();
 
@@ -51,7 +70,10 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
         const {valor, tipo, descricao} = req.body;
         const id = req.params.id;
         if(!valor || !tipo || !descricao || !id) return res.status(422).send()
-        console.log(valor, tipo, descricao, id);
+        if(!['c', 'd'].includes(tipo)) return res.status(422).send();
+        if(valor < 0) return res.status(422).send();
+        if(descricao.length > 10) return res.status(422).send();
+        log(valor, tipo, descricao, id);
         const obj = JSON.parse(await client.get(String(id)) ?? '{}');
         const dataTransacao = new Date(Date.now());
         if(Object.keys(obj).length !== 0){
@@ -64,8 +86,10 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
                 realizada_em: dataTransacao
             }
 
+            obj.saldo.total = novoSaldo;
             obj.ultimas_transacoes = [transacao, ...obj.ultimas_transacoes].slice(0, 10);
             client.set(String(id), JSON.stringify(obj));
+            log('Resultado transacao: ', obj.saldo.total)
             pg<Cliente>('clientes').update('saldo', novoSaldo).where('id', id).then(() => {}).catch(() => {});
             pg<Transacao>('transacoes').insert({...transacao, id_cliente: Number(id)}).then(() => {}).catch(() => {});
             return res.status(200).send({limite: obj.saldo.limite, saldo: novoSaldo});
@@ -92,6 +116,7 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
                     ...prevTrans
                 ]
             }
+            log('Resultado transacao: ', redisInfo.saldo.total)
             await client.set(String(id), JSON.stringify(redisInfo));
             pg<Cliente>('clientes').update('saldo', novoSaldo).where('id', id).then(() => {}).catch(() => {});
             pg<Transacao>('transacoes').insert({...transacao, id_cliente: cliente.id}).then(() => {}).catch(() => {});
@@ -105,14 +130,16 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
 app.get('/clientes/:id/extrato', async (req, res) => {
     try{
         const id = req.params.id;
-        console.log('Pegando extrato do id: ', id)
+        log('Pegando extrato do id: ', id)
         const obj = JSON.parse(await client.get(String(id)) ?? '{}');
         if(Object.keys(obj).length !== 0){
+            log('Resultado extrato: ', obj.saldo.total)
             return res.status(200).send(obj);
         }else{
             const cliente = await pg<Cliente>('clientes').where('id', id).first();
             if(!cliente) return res.status(404).send();
             const prevTrans = await pg<Transacao>('transacoes').where('id', id).orderBy('realizada_em').limit(10);
+            log('Resultado extrato (sem redis): ', cliente.saldo)
             return res.status(200).send({
                 saldo: {
                     total: cliente.saldo,

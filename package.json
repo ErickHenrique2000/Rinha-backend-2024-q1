@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc -p .",
     "start": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules src/index.ts"
   },
   "keywords": [],
