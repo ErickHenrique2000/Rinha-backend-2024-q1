@@ -50,6 +50,7 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
     try{
         const {valor, tipo, descricao} = req.body;
         const id = req.params.id;
+        if(!valor || !tipo || !descricao || !id) return res.status(422).send()
         console.log(valor, tipo, descricao, id);
         const obj = JSON.parse(await client.get(String(id)) ?? '{}');
         const dataTransacao = new Date(Date.now());
