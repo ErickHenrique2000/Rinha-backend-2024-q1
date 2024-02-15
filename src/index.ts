@@ -65,7 +65,7 @@ app.use(express.json())
 
 app.get('/api', (req, res) => {
     console.log('olá');
-    pg('clientes').then(resp => console.log(resp));
+    pg.raw(`SELECT * FROM CLIENTES WHERE id = ${1} FOR UPDATE`).then(resp => console.log(resp.rows));
     return res.status(200).send();
 })
 
@@ -99,7 +99,8 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
         //     return res.status(200).send({limite: obj.saldo.limite, saldo: novoSaldo});
         // }else{
             // log('AQ: ', descricao)
-            const cliente = await pg<Cliente>('clientes').where('id', id).first();
+            // const cliente = await pg<Cliente>('clientes').where('id', id).first().forUpdate();
+            const cliente = (await pg.raw(`SELECT * FROM CLIENTES WHERE id = ${id} FOR UPDATE`)).rows[0];
             if(!cliente) return res.status(404).send();
             const novoSaldo = tipo == 'd' ? cliente.saldo - valor : cliente.saldo + valor;
             if(tipo == 'd' && novoSaldo < -cliente.limite) return res.status(422).send();
