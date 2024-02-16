@@ -118,7 +118,8 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
                         // }
                         // log('Resultado transacao: ', novoSaldo)
                         // await client.set(String(id), JSON.stringify(redisInfo));
-            await pg.raw(`update clientes set saldo = saldo + ${tipo == 'c' ? valor : -valor} where id = ${id}`);
+            const update = await pg.raw(`update clientes set saldo = saldo + ${tipo == 'c' ? valor : -valor} where id = ${id} ${tipo == 'd' ? `and saldo - ${valor} >= - limite` : ''} returning saldo`);
+            if(update.rows.length == 0) return res.status(422).send();
             const transacao = {
                 valor,
                 tipo,
@@ -126,7 +127,7 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
                 realizada_em: dataTransacao
             }
             pg<Transacao>('transacoes').insert({...transacao, id_cliente: cliente.id}).then(() => {}).catch(() => {});
-            return res.status(200).send({limite: cliente.limite, saldo: novoSaldo});
+            return res.status(200).send({limite: cliente.limite, saldo: update.rows[0].saldo});
         // }
     }catch(err){
         log('Erro', (err as Error).message)
