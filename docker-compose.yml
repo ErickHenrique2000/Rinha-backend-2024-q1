@@ -4,7 +4,7 @@ services:
   api01: &api
     # Lembre-se de que seu serviço HTTP deve estar hospedado num repositório
     # publicamente acessível! Ex.: hub.docker.com
-    image: teste-node-rinha
+    image: erickhenrique2000/node-rinha-q1
     hostname: api01
     environment:
       - HOST=10.0.0.2
