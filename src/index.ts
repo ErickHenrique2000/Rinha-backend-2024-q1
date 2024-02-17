@@ -2,7 +2,8 @@ import express from 'express'
 import knex from 'knex'
 import { resolve } from 'path'
 import { appendFileSync, existsSync, mkdirSync } from 'fs';
-import { createClient } from 'redis';
+import 'dotenv/config'
+
 
 interface Cliente{
     id: number
@@ -36,21 +37,14 @@ if (!existsSync(LOGS_DIR)) mkdirSync(LOGS_DIR);
 
 const path = resolve(LOGS_DIR, fileName);
 
-
-const client = createClient();
-
-client.on('error', err => console.log('Redis Client Error', err));
-
-client.connect()
-
 const pg = knex({
     client: 'pg',
     connection: {
-      host: '127.0.0.1',
-      port: 5433,
-      user: 'root',
-      database: 'project_d',
-      password: '123456',
+      host: process.env.HOST,
+      port: Number(process.env.PORT),
+      user: process.env.USER,
+      database: process.env.DATABASE,
+      password: process.env.PASSWORD,
       pool: {
         min: 10,
         max: 30
@@ -162,6 +156,6 @@ app.get('/clientes/:id/extrato', async (req, res) => {
     }
 })
 
-app.listen(9999, () => {
-    console.log('listening on port 9999')
+app.listen(process.env.API_PORT, () => {
+    console.log('listening on port ', process.env.API_PORT)
 })
