@@ -46,8 +46,8 @@ const pg = knex({
       database: process.env.DATABASE,
       password: process.env.PASSWORD,
       pool: {
-        min: 10,
-        max: 30
+        min: 20,
+        max: 50
       }
     }
   });
@@ -94,7 +94,8 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
         // }else{
             // log('AQ: ', descricao)
             // const cliente = await pg<Cliente>('clientes').where('id', id).first().forUpdate();
-            const cliente = (await pg.raw(`SELECT * FROM CLIENTES WHERE id = ${id} FOR UPDATE`)).rows[0];
+            // const cliente = await pg.raw(`SELECT * FROM CLIENTES WHERE id = ${id}`).rows[0];
+            const cliente = await pg('clientes').where('id', id).first();
             if(!cliente) return res.status(404).send();
             const novoSaldo = tipo == 'd' ? cliente.saldo - valor : cliente.saldo + valor;
             if(tipo == 'd' && novoSaldo < -cliente.limite) return res.status(422).send();
@@ -120,7 +121,7 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
                 descricao,
                 realizada_em: dataTransacao
             }
-            pg<Transacao>('transacoes').insert({...transacao, id_cliente: cliente.id}).then(() => {}).catch(() => {});
+            await pg<Transacao>('transacoes').insert({...transacao, id_cliente: cliente.id});
             return res.status(200).send({limite: cliente.limite, saldo: update.rows[0].saldo});
         // }
     }catch(err){
