@@ -36,7 +36,7 @@ Com isso nossa primeira ideia foi algo básico, iriamos utilizar 2 tipos de arma
 <p>
 Ao finalizarmos nossa primeira versão fomos rodar ela localmente e passar a primeira bateria de testes, ao final do primeiro teste não poderiamos estar mais surpresos, apenas 28 erros entre 60000 requests:
 <br />
-<img src="https://prnt.sc/djMhMjMiWFCI" width="40vw"></img>
+<img src="https://i.ibb.co/nzkV6GN/Screenshot-4.png" width="40vw"></img>
 <br />
 Maravilha certo? Só corrigir alguns errinhos, criar os dockers e partir para o abraço né? <br />
 É agora que a nossa jornada começa a ficar interessante e tortuosa, algo que só fomos descobrir no futuro é que esses 28 erros estavam ocultando uma centena de outros erros presentes 
