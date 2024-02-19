@@ -47,6 +47,7 @@ Maravilha certo? Só corrigir alguns errinhos, criar os dockers e partir para o 
 
 <p>
 Iniciamos a correção das validações, em boa parte foi tranquilo, descobrimos que não estavamos validando o body que estavamos recebendo corretamente, adicionamos essas validações, porém após resolver esses erros, ficamos com um erro final, o saldo não estava sendo atualizado corretamente, ou seja, estavamos travados na situação de concorrência, estavamos recebendo inúmeras requisições para atualizar o saldo e todas estavam executando juntas, pegávamos o valor que estava armazenado atualizávamos ele e inserindo, mas isso gerava inconsistencia se os dados fossem capturados antes das atualizações, para resolver isso decidimos dar um passo atrás na nossa arquitetura e focar no básico, deixamos o Redis de lado e passamos a utilizar somente o PostgreSQL, por ser um banco ACID utilizamos desse apecto para atualizar os saldos no update, assim todos os saldos eram atualizados com consistencia, eliminando assim um problema de paralelismo, após isso conseguimos passar por todas as validações, porém entramos em outro problema.
+<br />
 <img src="https://i.ibb.co/nrw6xJ8/Screenshot-2.png" width=550></img>
 <br />
 Estavamos agora ultrapassando os limites estipulados
