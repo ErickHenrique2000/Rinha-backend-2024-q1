@@ -54,3 +54,9 @@ Estavamos agora ultrapassando os limites estipulados
 </p>
 
 ## Corrigindo limites
+Novamente estavamos penando com o paralelismo, estavamos realizando 2 querys ao banco, uma para pegar o cliente e outra para atualizar o saldo do cliente, se fosse permitido, o problema é que poderiam chegar 2 requisições que abaixassem o saldo da pessoa juntas, se esse fosse o caso, o node executaria até a chamada da query da primeira pessoa, por ser uma operação que devolve uma promise, iria mudar o contexto de execução para a outra função que também buscaria o valor atual do cliente e devolveria o contexto de volta para a outra requisição, após as querys concluidas ambas as requisições teriam o mesmo valor para o cliente e as duas atualizariam, podendo estourar o limite.<br />
+Fizemos alguns testes rápidos com funções como select for update mas não foram bem sucedidos, como estava tarde deixamos para o proximo dia, que foi quando a solução surgiu, iriamos adicionar mais uma condição no where do update, a verificação do limite, dessa forma o banco nos salvaria novamente desse problema, ao final do update verificariamos se atualizamos alguma linha, caso não tenha sido atualizada nenhuma linha saberemos que o limite foi excedido e podemos retornar isso, fizemos essa tratativa e finalmente tivemos nossa primeira versão sem erros: <br />
+<img src="https://i.ibb.co/8Pp4jg8/Screenshot-3.png" width=550></img> <br/>
+Perfeito, agora sim, só jogar para container e aproveitar o sucesso, correto? Novamente não kkkkkkkkkkk, vamos entrar agora no nosso próximo grande desafio, a quantidade limitada de recursos
+
+## Aprimorando a API e entendendo uso de recursos
