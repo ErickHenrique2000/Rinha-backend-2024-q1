@@ -71,58 +71,24 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
         if(!['c', 'd'].includes(tipo)) return res.status(422).send();
         if(valor < 0 || !Number.isInteger(valor)) return res.status(422).send();
         if(descricao.length > 10) return res.status(422).send();
-        // log(valor, tipo, descricao, id);
-        // const obj = JSON.parse(await client.get(String(id)) ?? '{}');
         const dataTransacao = new Date(Date.now());
-        // if(Object.keys(obj).length !== 0){
-        //     const novoSaldo = tipo == 'd' ? obj.saldo.total - valor : obj.saldo.total + valor;
-        //     if(tipo == 'd' && novoSaldo < -obj.saldo.limite) return res.status(422).send();
-        //     const transacao = {
-        //         valor,
-        //         tipo,
-        //         descricao,
-        //         realizada_em: dataTransacao
-        //     }
-
-        //     obj.saldo.total = novoSaldo;
-        //     obj.ultimas_transacoes = [transacao, ...obj.ultimas_transacoes].slice(0, 10);
-        //     client.set(String(id), JSON.stringify(obj));
-        //     log('Resultado transacao: ', obj.saldo.total)
-        //     await pg.raw(`update clientes set saldo = saldo + ${tipo == 'c' ? valor : -valor} where id = ${id}`);
-        //     pg<Transacao>('transacoes').insert({...transacao, id_cliente: Number(id)}).then(() => {}).catch(() => {});
-        //     return res.status(200).send({limite: obj.saldo.limite, saldo: novoSaldo});
-        // }else{
-            // log('AQ: ', descricao)
-            // const cliente = await pg<Cliente>('clientes').where('id', id).first().forUpdate();
-            // const cliente = await pg.raw(`SELECT * FROM CLIENTES WHERE id = ${id}`).rows[0];
+        // const novoSaldo = tipo == 'd' ? cliente.saldo - valor : cliente.saldo + valor;
+        // if(tipo == 'd' && novoSaldo < -cliente.limite) return res.status(422).send();
+        
+        const update = await pg.raw(`update clientes set saldo = saldo + ${tipo == 'c' ? valor : -valor} where id = ${id} ${tipo == 'd' ? `and saldo - ${valor} >= - limite` : ''} returning saldo, limite`);
+        if(update.rows.length == 0){
             const cliente = await pg('clientes').where('id', id).first();
             if(!cliente) return res.status(404).send();
-            const novoSaldo = tipo == 'd' ? cliente.saldo - valor : cliente.saldo + valor;
-            if(tipo == 'd' && novoSaldo < -cliente.limite) return res.status(422).send();
-            // const prevTrans = await pg<Transacao>('transacoes').where('id', id).orderBy('realizada_em').limit(9);
-            
-            // const redisInfo: any = {
-                //     saldo: {
-                    //         total: novoSaldo,
-                    //         limite: cliente.limite
-                    //     },
-                    //     ultimas_transacoes: [
-                        //         transacao,
-                        //         ...prevTrans
-                        //     ]
-                        // }
-                        // log('Resultado transacao: ', novoSaldo)
-                        // await client.set(String(id), JSON.stringify(redisInfo));
-            const update = await pg.raw(`update clientes set saldo = saldo + ${tipo == 'c' ? valor : -valor} where id = ${id} ${tipo == 'd' ? `and saldo - ${valor} >= - limite` : ''} returning saldo`);
-            if(update.rows.length == 0) return res.status(422).send();
-            const transacao = {
-                valor,
-                tipo,
-                descricao,
-                realizada_em: dataTransacao
-            }
-            await pg<Transacao>('transacoes').insert({...transacao, id_cliente: cliente.id});
-            return res.status(200).send({limite: cliente.limite, saldo: update.rows[0].saldo});
+            return res.status(422).send();
+        } 
+        const transacao = {
+            valor,
+            tipo,
+            descricao,
+            realizada_em: dataTransacao
+        }
+        await pg<Transacao>('transacoes').insert({...transacao, id_cliente: Number(id)});
+        return res.status(200).send({limite: update.rows[0].limite, saldo: update.rows[0].saldo});
         // }
     }catch(err){
         log('Erro', (err as Error).message)

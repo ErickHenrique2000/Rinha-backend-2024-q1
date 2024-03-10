@@ -54,23 +54,21 @@ app.post('/clientes/:id/transacoes', async (req, res) => {
         if (descricao.length > 10)
             return res.status(422).send();
         const dataTransacao = new Date(Date.now());
-        const cliente = await pg('clientes').where('id', id).first();
-        if (!cliente)
-            return res.status(404).send();
-        const novoSaldo = tipo == 'd' ? cliente.saldo - valor : cliente.saldo + valor;
-        if (tipo == 'd' && novoSaldo < -cliente.limite)
+        const update = await pg.raw(`update clientes set saldo = saldo + ${tipo == 'c' ? valor : -valor} where id = ${id} ${tipo == 'd' ? `and saldo - ${valor} >= - limite` : ''} returning saldo, limite`);
+        if (update.rows.length == 0) {
+            const cliente = await pg('clientes').where('id', id).first();
+            if (!cliente)
+                return res.status(404).send();
             return res.status(422).send();
-        const update = await pg.raw(`update clientes set saldo = saldo + ${tipo == 'c' ? valor : -valor} where id = ${id} ${tipo == 'd' ? `and saldo - ${valor} >= - limite` : ''} returning saldo`);
-        if (update.rows.length == 0)
-            return res.status(422).send();
+        }
         const transacao = {
             valor,
             tipo,
             descricao,
             realizada_em: dataTransacao
         };
-        await pg('transacoes').insert(Object.assign(Object.assign({}, transacao), { id_cliente: cliente.id }));
-        return res.status(200).send({ limite: cliente.limite, saldo: update.rows[0].saldo });
+        await pg('transacoes').insert(Object.assign(Object.assign({}, transacao), { id_cliente: Number(id) }));
+        return res.status(200).send({ limite: update.rows[0].limite, saldo: update.rows[0].saldo });
     }
     catch (err) {
         log('Erro', err.message);

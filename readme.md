@@ -60,3 +60,6 @@ Fizemos alguns testes rápidos com funções como select for update mas não for
 Perfeito, agora sim, só jogar para container e aproveitar o sucesso, correto? Novamente não kkkkkkkkkkk, vamos entrar agora no nosso próximo grande desafio, a quantidade limitada de recursos
 
 ## Aprimorando a API e entendendo uso de recursos
+Infelizmente não tivemos muito tempo após finalizar a versão sem erros e partirmos para o docker, tivemos muitos problemas na faculdade e no trabalho que reduziram a praticamente 0 o tempo semanal gasto com o projeto, em resumo a quantidade limitada de recursos foi nosso maior problema, nos primeiros testes encontramos um cenário caótico de cerca de 80% de falha, mas após realizarmos algumas alterações básicas na api e alocar os recursos mais corretamente chegamos em resultados mais positivos. <br />
+<img src='https://i.ibb.co/jW9dyDN/final-rinha.png' width=550 /> <br />
+Ficamos um pouco decepcionados com o resultado final, quando tivermos um pouco mais de tempo, com toda certeza iremos participar novamente, de toda forma sentimos que saimos bem melhor do que começamos e isso já vale muito, muito obrigado à todos que acessaram esse repositório e viram nossa jornada!
